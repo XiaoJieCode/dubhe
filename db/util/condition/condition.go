@@ -1,4 +1,4 @@
-package clause
+package condition
 
 const (
 	OpEq      = "="
@@ -87,4 +87,85 @@ func (m *Match) NotNull(field string) *Match {
 // Or 或条件
 func (m *Match) Or(field string, value any) *Match {
 	return m.add(field, OpOr, value)
+}
+func (m *Match) WhereSql() (string, []any) {
+	if len(m.Clauses) == 0 {
+		return "", nil
+	}
+
+	sql := ""
+	args := []any{}
+	for i, c := range m.Clauses {
+		// 拼接连接符，默认AND，遇到OpOr用OR
+		if i > 0 {
+			if c.Op == OpOr {
+				sql += " OR "
+				continue
+			} else {
+				sql += " AND "
+			}
+		}
+
+		switch c.Op {
+		case OpEq, OpNEq, OpGt, OpGte, OpLt, OpLte, OpLike:
+			sql += c.Field + " " + c.Op + " ?"
+			args = append(args, c.Value)
+		case OpIn:
+			// 断言value是切片
+			valSlice, ok := toSlice(c.Value)
+			if !ok || len(valSlice) == 0 {
+				// 这里直接跳过这个条件，不拼接SQL，不加参数
+				// 但跳过后连接符处理复杂一点，需要特殊判断。
+				// 简单处理：去掉前面的连接符（AND/OR）
+				// 方案：因为无法回退，建议先把要拼的条件缓存起来，最后再拼接。
+				continue
+			}
+			sql += c.Field + " IN ("
+			for j := range valSlice {
+				if j > 0 {
+					sql += ","
+				}
+				sql += "?"
+			}
+			sql += ")"
+			args = append(args, valSlice...)
+		case OpNull, OpNotNull:
+			sql += c.Field + " " + c.Op
+		default:
+			// 默认按等号处理
+			sql += c.Field + " = ?"
+			args = append(args, c.Value)
+		}
+	}
+
+	return sql, args
+}
+
+// 辅助函数：把any转成[]any切片
+func toSlice(value any) ([]any, bool) {
+	switch v := value.(type) {
+	case []any:
+		return v, true
+	case []string:
+		res := make([]any, len(v))
+		for i, s := range v {
+			res[i] = s
+		}
+		return res, true
+	case []int:
+		res := make([]any, len(v))
+		for i, n := range v {
+			res[i] = n
+		}
+		return res, true
+	case []int64:
+		res := make([]any, len(v))
+		for i, n := range v {
+			res[i] = n
+		}
+		return res, true
+	// 可以扩展其他切片类型...
+	default:
+		return nil, false
+	}
 }

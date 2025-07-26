@@ -6,32 +6,38 @@ import (
 )
 
 type RepoCfg struct {
-	TableName  string
-	Datasource string
+	UseDataSource string
 }
 
 type RepoDefine interface {
-	NewRepo func(cfg RepoCfg) *Repo[]
+	RepoDefine() RepoCfg
+	TableName() string
 }
+
 // NewRepo Build Repo
-func NewRepo[T any](cfg RepoCfg) *Repo[T] {
+func NewRepo[T RepoDefine]() IRepo[T] {
+	model := *new(T)
+	tableName := model.TableName()
+	cfg := model.RepoDefine()
 	var db *gorm.DB
-	if cfg.TableName == "" {
+	if tableName == "" {
 		panic("table name is empty")
 	}
-	if cfg.Datasource == "" {
+	if cfg.UseDataSource == "" {
 		db = ds.MustGetDB()
 	} else {
-		db = ds.MustGetDB(cfg.Datasource)
+		db = ds.MustGetDB(cfg.UseDataSource)
 	}
-	var model T
-
+	e := db.AutoMigrate(model) // 自动创建或更新 user 表
+	if e != nil {
+		panic(e)
+	}
 	return &Repo[T]{
-		DB:    db,
-		Ctx:   nil,
-		Table: cfg.TableName,
-		Model: &model,
-		Cfg:   &cfg,
+		db:    db,
+		ctx:   nil,
+		table: tableName,
+		model: &model,
+		cfg:   &cfg,
 	}
 
 }

@@ -2,15 +2,18 @@ package testdata
 
 import (
 	"dubhe/db"
-	"gorm.io/gorm"
 )
 
 type User struct {
-	gorm.Model
+	db.BaseModel
 	Name string `gorm:"column:name"`
 	Age  int    `gorm:"column:age"`
 }
 
-var UserRepo = db.NewRepo[User](db.RepoCfg{
-	TableName: "user",
-})
+func (u User) RepoDefine() db.RepoCfg {
+	return db.RepoCfg{}
+}
+
+func (u User) TableName() string {
+	return "user"
+}
