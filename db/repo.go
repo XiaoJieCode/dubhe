@@ -47,14 +47,19 @@ type IRepo[T any] interface {
 	// Scan 扫描结果到目标对象
 	Scan(dest any)
 
+	// Set 赋值字段
+	Set(field string, val any) IRepo[T]
+	// SetMap 根据Map设置字段
+	SetMap(map[string]any) IRepo[T]
 	// Add 新增单条记录
-	Add(*T) int64
+	Create(*T) int64
 	// AddBatch 批量新增
-	AddBatch([]*T) int64
+	CreateBatch([]*T) int64
 	// Save 保存（存在即更新，不存在即新增）
 	Save(*T) int64
 	// Update 更新记录
-	Update(*T) int64
+	Update() int64
+	UpdateFull(*T) int64
 	// Del 删除记录
 	Del() int64
 

@@ -3,10 +3,15 @@ package db
 import (
 	"dubhe/db/ds"
 	"gorm.io/gorm"
+	"sync"
+)
+
+var (
+	templates = &sync.Map{}
 )
 
 type RepoCfg struct {
-	UseDataSource string
+	DataSource string
 }
 
 type RepoDefine interface {
@@ -23,21 +28,34 @@ func NewRepo[T RepoDefine]() IRepo[T] {
 	if tableName == "" {
 		panic("table name is empty")
 	}
-	if cfg.UseDataSource == "" {
+	if cfg.DataSource == "" {
 		db = ds.MustGetDB()
 	} else {
-		db = ds.MustGetDB(cfg.UseDataSource)
+		db = ds.MustGetDB(cfg.DataSource)
 	}
-	e := db.AutoMigrate(model) // 自动创建或更新 user 表
+	key := cfg.DataSource + "_" + tableName
+	_t, ok := templates.Load(key)
+	if ok {
+		return &Repo[T]{
+			DB:           db,
+			RepoTemplate: _t.(*RepoTemplate[T]),
+		}
+	}
+
+	e := db.AutoMigrate(model)
 	if e != nil {
 		panic(e)
 	}
-	return &Repo[T]{
-		db:    db,
+	temp := &RepoTemplate[T]{
 		ctx:   nil,
 		table: tableName,
 		model: &model,
 		cfg:   &cfg,
+	}
+	templates.Store(key, temp)
+	return &Repo[T]{
+		DB:           db,
+		RepoTemplate: temp,
 	}
 
 }

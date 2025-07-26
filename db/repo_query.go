@@ -8,7 +8,7 @@ import (
 func (r *Repo[T]) Get() *T {
 	var model T
 	sql, args := r.match.WhereSql()
-	db := r.db.Model(&model)
+	db := r.DB.Model(&model).Omit(r.omits...)
 	if sql != "" {
 		db = db.Where(sql, args...)
 	}
@@ -39,11 +39,16 @@ func (r *Repo[T]) GetOrInit() *T {
 func (r *Repo[T]) List() []*T {
 	var list []*T
 	sql, args := r.match.WhereSql()
-	db := r.db.Model(new(T))
+	db := r.DB.Model(new(T)).Omit(r.omits...)
 	if sql != "" {
 		db = db.Where(sql, args...)
 	}
-	err := db.Find(&list).Error
+	var err error
+	if r.limit != 0 {
+		err = db.Limit(int(r.limit)).Find(&list).Error
+	} else {
+		err = db.Find(&list).Error
+	}
 	if err != nil {
 		r.err = err
 		r.checkErr(err)
@@ -56,11 +61,11 @@ func (r *Repo[T]) WithPage(page *Page) IRepo[T] {
 	return r
 }
 func (r *Repo[T]) Page() *Page {
-	var list []any // 作为中间容器
+	var list []*T // 作为中间容器
 	var count int64
 
 	sql, args := r.match.WhereSql()
-	db := r.db.Model(new(T))
+	db := r.DB.Model(new(T)).Omit(r.omits...)
 
 	// 获取总数
 	if sql != "" {
@@ -99,7 +104,7 @@ func (r *Repo[T]) PageT() *PageT[T] {
 	var count int64
 
 	sql, args := r.match.WhereSql()
-	db := r.db.Model(new(T))
+	db := r.DB.Model(new(T)).Omit(r.omits...)
 
 	// 获取总数
 	if sql != "" {
@@ -135,7 +140,7 @@ func (r *Repo[T]) PageT() *PageT[T] {
 func (r *Repo[T]) Count() int64 {
 	var count int64
 	sql, args := r.match.WhereSql()
-	db := r.db.Model(new(T))
+	db := r.DB.Model(new(T))
 	if sql != "" {
 		db = db.Where(sql, args...)
 	}
@@ -150,7 +155,7 @@ func (r *Repo[T]) Count() int64 {
 
 func (r *Repo[T]) Scan(dest any) {
 	sql, args := r.match.WhereSql()
-	db := r.db.Model(new(T))
+	db := r.DB.Model(new(T)).Omit(r.omits...)
 	if sql != "" {
 		db = db.Where(sql, args...)
 	}

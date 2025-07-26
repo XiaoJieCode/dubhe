@@ -1,22 +1,35 @@
 package db
 
+// Set 赋值字段
+func (r *Repo[T]) Set(field string, val any) IRepo[T] {
+	r.match.Set(field, val)
+	return r
+}
+
+// SetMap 根据Map设置字段
+func (r *Repo[T]) SetMap(m map[string]any) IRepo[T] {
+	for key, value := range m {
+		r.match.Set(key, value)
+	}
+	return r
+}
 func (r *Repo[T]) Where(s string, a ...any) IRepo[T] {
-	//TODO implement me
-	panic("implement me")
+	r.DB = r.DB.Where(s, a)
+	return r
 }
 func (r *Repo[T]) Desc(s string) IRepo[T] {
-	//TODO implement me
-	panic("implement me")
+	r.match.Desc(s)
+	return r
 }
 
 func (r *Repo[T]) Asc(s string) IRepo[T] {
-	//TODO implement me
-	panic("implement me")
+	r.match.Asc(s)
+	return r
 }
 
 func (r *Repo[T]) Omit(s ...string) IRepo[T] {
-	//TODO implement me
-	panic("implement me")
+	r.omits = append(r.omits, s...)
+	return r
 }
 
 func (r *Repo[T]) Eq(s string, a any) IRepo[T] {
@@ -52,35 +65,35 @@ func (r *Repo[T]) Lt(s string, a any) IRepo[T] {
 }
 
 func (r *Repo[T]) Lte(s string, a any) IRepo[T] {
-	//TODO implement me
-	panic("implement me")
+	r.match.Lte(s, s)
+	return r
 }
 
 func (r *Repo[T]) NotNull(s string) IRepo[T] {
-	//TODO implement me
-	panic("implement me")
+	r.match.NotNull(s)
+	return r
 }
 
 func (r *Repo[T]) Null(s string) IRepo[T] {
-	//TODO implement me
-	panic("implement me")
+	r.match.Null(s)
+	return r
 }
 
 func (r *Repo[T]) Or(s string, a ...any) IRepo[T] {
-	//TODO implement me
-	panic("implement me")
+	r.match.Or(s, a)
+	return r
 }
 func (r *Repo[T]) Like(s string, a any) IRepo[T] {
-	//TODO implement me
-	panic("implement me")
+	r.match.Like(s, a)
+	return r
 }
 
 func (r *Repo[T]) Select(s ...string) IRepo[T] {
-	//TODO implement me
-	panic("implement me")
+	r.selects = append(r.selects, s...)
+	return r
 }
 
 func (r *Repo[T]) Limit(i int64) IRepo[T] {
-	//TODO implement me
-	panic("implement me")
+	r.limit = i
+	return r
 }

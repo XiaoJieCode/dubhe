@@ -12,6 +12,9 @@ const (
 	OpNull    = "IS NULL"
 	OpNotNull = "IS NOT NULL"
 	OpOr      = "OR"
+	OpAsc     = "ASC"
+	OpDesc    = "DESC"
+	OpSet     = "="
 )
 
 type Clause struct {
@@ -21,6 +24,8 @@ type Clause struct {
 }
 type Match struct {
 	Clauses []Clause
+	Orders  []Clause
+	Sets    []Clause
 }
 
 func NewMatch() *Match {
@@ -29,6 +34,14 @@ func NewMatch() *Match {
 
 func (m *Match) add(field, op string, value any) *Match {
 	m.Clauses = append(m.Clauses, Clause{Field: field, Op: op, Value: value})
+	return m
+}
+func (m *Match) order(field, op string) *Match {
+	m.Orders = append(m.Orders, Clause{Field: field, Op: op})
+	return m
+}
+func (m *Match) Set(field string, value any) *Match {
+	m.Sets = append(m.Sets, Clause{Field: field, Value: value, Op: OpSet})
 	return m
 }
 
@@ -88,6 +101,15 @@ func (m *Match) NotNull(field string) *Match {
 func (m *Match) Or(field string, value any) *Match {
 	return m.add(field, OpOr, value)
 }
+
+func (m *Match) Asc(field string) *Match {
+	m.order(field, OpAsc)
+	return m
+}
+func (m *Match) Desc(field string) *Match {
+	m.order(field, OpDesc)
+	return m
+}
 func (m *Match) WhereSql() (string, []any) {
 	if len(m.Clauses) == 0 {
 		return "", nil
@@ -139,6 +161,47 @@ func (m *Match) WhereSql() (string, []any) {
 	}
 
 	return sql, args
+}
+
+// OrderSql 构建 ORDER BY 子句，返回类似 "ORDER BY field1 ASC, field2 DESC"
+func (m *Match) OrderSql() string {
+	if len(m.Orders) == 0 {
+		return ""
+	}
+	sql := "ORDER BY "
+	for i, c := range m.Orders {
+		if i > 0 {
+			sql += ", "
+		}
+		sql += c.Field + " " + c.Op
+	}
+	return sql
+}
+
+// SetSql 构建 SET 子句和对应参数，通常用于 UPDATE 语句
+func (m *Match) SetSql() (string, []any) {
+	if len(m.Sets) == 0 {
+		return "", nil
+	}
+	sql := "SET "
+	args := make([]any, 0, len(m.Sets))
+	for i, c := range m.Sets {
+		if i > 0 {
+			sql += ", "
+		}
+		sql += c.Field + " = ?"
+		args = append(args, c.Value)
+	}
+	return sql, args
+}
+
+// SetMap 返回一个字段到值的 map，方便直接传给 ORM 的 Updates(map[string]interface{}) 等方法
+func (m *Match) SetMap() map[string]any {
+	res := make(map[string]any, len(m.Sets))
+	for _, c := range m.Sets {
+		res[c.Field] = c.Value
+	}
+	return res
 }
 
 // 辅助函数：把any转成[]any切片
