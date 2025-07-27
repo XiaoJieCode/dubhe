@@ -28,24 +28,21 @@ func (r *Repo[T]) Create(t *T) int64 {
 }
 
 func (r *Repo[T]) CreateBatch(ts []*T) int64 {
-	sql, args := r.match.WhereSql()
 	var t T
-	db := r.DB.Model(t).Omit(r.omits...)
+	db := r.DB.Model(&t).Omit(r.omits...)
+	sql, args := r.match.WhereSql()
 	if sql != "" {
 		db = db.Where(sql, args...)
 	}
-	rowAffect := int64(0)
-	for _, item := range ts {
-		err := db.Save(item).Error
-		rowAffect += db.RowsAffected
-		if err != nil {
-			r.err = err
-			r.checkErr(err)
-			return 0
-		}
+
+	err := db.CreateInBatches(ts, 1000).Error
+	if err != nil {
+		r.err = err
+		r.checkErr(err)
+		return 0
 	}
 
-	return rowAffect
+	return int64(len(ts))
 }
 
 func (r *Repo[T]) Save(t *T) int64 {

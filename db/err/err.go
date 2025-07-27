@@ -11,5 +11,8 @@ func (e Error) Error() string {
 }
 
 func NewError(err error) *Error {
-	return &Error{error: err}
+	if err != nil {
+		return &Error{error: err}
+	}
+	return nil
 }

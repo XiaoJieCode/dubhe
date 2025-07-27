@@ -51,6 +51,9 @@ func (r *Repo[T]) OnErr(f func(IRepo[T], *err.Error) bool) IRepo[T] {
 	r.onErrFunc = f
 	return r
 }
+func (r *Repo[T]) Err() *err.Error {
+	return err.NewError(r.err)
+}
 
 func (r *Repo[T]) Clone() IRepo[T] {
 	//TODO implement me

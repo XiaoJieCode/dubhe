@@ -20,6 +20,8 @@ type IRepo[T any] interface {
 	Rollback() IRepo[T]
 	// OnErr 设置错误处理函数
 	OnErr(func(IRepo[T], *err.Error) bool) IRepo[T]
+	// Err 返回Err
+	Err() *err.Error
 	// Clone 克隆当前Repo实例
 	Clone() IRepo[T]
 	// WithCtx 设置上下文
