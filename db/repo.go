@@ -51,9 +51,9 @@ type IRepo[T any] interface {
 	Set(field string, val any) IRepo[T]
 	// SetMap 根据Map设置字段
 	SetMap(map[string]any) IRepo[T]
-	// Add 新增单条记录
+	// Create 新增单条记录
 	Create(*T) int64
-	// AddBatch 批量新增
+	// CreateBatch  批量新增
 	CreateBatch([]*T) int64
 	// Save 保存（存在即更新，不存在即新增）
 	Save(*T) int64

@@ -1,6 +1,9 @@
 package db
 
-import "dubhe/db/err"
+import (
+	"dubhe/db/err"
+	"fmt"
+)
 
 func (r *Repo[T]) checkErr(e error) {
 	if r.onErrFunc != nil {
@@ -8,5 +11,7 @@ func (r *Repo[T]) checkErr(e error) {
 		if needPanic {
 			panic(r.err)
 		}
+	} else {
+		fmt.Println("error not handle: ", e)
 	}
 }
