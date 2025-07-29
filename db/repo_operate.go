@@ -1,74 +1,83 @@
 package db
 
-import "fmt"
+import (
+	"fmt"
+)
 
-func (r *Repo[T]) Raw(s string, a ...any) IRepo[T] {
-	//TODO implement me
-	panic("implement me")
+// Exec 执行原生 SQL 写操作（Insert/Update/Delete）
+func (r *Repo[T]) Exec(sql string, args ...any) int64 {
+	newRepo := r.cloneInternal()
+	tx := newRepo.db.Exec(sql, args...)
+	if tx.Error != nil {
+		newRepo.err = tx.Error
+		newRepo.checkErr(tx.Error)
+		return 0
+	}
+	return tx.RowsAffected
 }
 
-func (r *Repo[T]) Exec(s string, a ...any) IRepo[T] {
-	//TODO implement me
-	panic("implement me")
-}
-
+// Create 插入单条数据
 func (r *Repo[T]) Create(t *T) int64 {
-	sql, args := r.match.WhereSql()
-	db := r.DB.Model(t).Omit(r.omits...)
+	newRepo := r.cloneInternal()
+	sql, args := newRepo.match.WhereSql()
+	db := newRepo.db.Model(t).Omit(newRepo.omits...)
 	if sql != "" {
 		db = db.Where(sql, args...)
 	}
 	err := db.Save(t).Error
 	if err != nil {
-		r.err = err
-		r.checkErr(err)
+		newRepo.err = err
+		newRepo.checkErr(err)
 		return 0
 	}
 	return db.RowsAffected
 }
 
+// CreateBatch 批量插入
 func (r *Repo[T]) CreateBatch(ts []*T) int64 {
+	newRepo := r.cloneInternal()
 	var t T
-	db := r.DB.Model(&t).Omit(r.omits...)
-	sql, args := r.match.WhereSql()
+	db := newRepo.db.Model(&t).Omit(newRepo.omits...)
+	sql, args := newRepo.match.WhereSql()
 	if sql != "" {
 		db = db.Where(sql, args...)
 	}
 
 	err := db.CreateInBatches(ts, 1000).Error
 	if err != nil {
-		r.err = err
-		r.checkErr(err)
+		newRepo.err = err
+		newRepo.checkErr(err)
 		return 0
 	}
 
 	return int64(len(ts))
 }
 
+// Save 根据 ID 存在与否执行 Create 或 Update
 func (r *Repo[T]) Save(t *T) int64 {
+	newRepo := r.cloneInternal()
 	model, ok := any(t).(IBaseModel)
 	if !ok {
-		r.err = fmt.Errorf("type does not implement IBaseModel")
-		r.checkErr(r.err)
+		newRepo.err = fmt.Errorf("type does not implement IBaseModel")
+		newRepo.checkErr(newRepo.err)
 		return 0
 	}
-
 	if model.GetID() == 0 {
-		return r.Create(t)
+		return newRepo.Create(t)
 	}
-
-	// 正确传参给 Update
-	db := r.DB.Omit(r.omits...)
+	db := newRepo.db.Omit(newRepo.omits...)
 	db.Statement.Dest = t
-	r.DB = db
-	return r.Update()
+	newRepo.db = db
+	return newRepo.Update()
 }
 
+// Update 部分字段更新
 func (r *Repo[T]) Update() int64 {
+	newRepo := r.cloneInternal()
 	var t T
-	sql, args := r.match.WhereSql()
-	updateMap := r.match.SetMap()
-	db := r.DB.Model(t).Omit(r.omits...)
+	sql, args := newRepo.match.WhereSql()
+	updateMap := newRepo.match.SetMap()
+	db := newRepo.db.Model(t).Omit(newRepo.omits...)
 
 	if sql != "" {
 		db = db.Where(sql, args...)
@@ -76,42 +85,45 @@ func (r *Repo[T]) Update() int64 {
 
 	result := db.Updates(updateMap)
 	if result.Error != nil {
-		r.err = result.Error
-		r.checkErr(result.Error)
+		newRepo.err = result.Error
+		newRepo.checkErr(result.Error)
 		return 0
 	}
 	return result.RowsAffected
 }
-func (r *Repo[T]) UpdateFull(t *T) int64 {
-	sql, args := r.match.WhereSql()
-	db := r.DB.Model(t).Omit(r.omits...)
 
+// UpdateFull 用结构体全字段更新
+func (r *Repo[T]) UpdateFull(t *T) int64 {
+	newRepo := r.cloneInternal()
+	sql, args := newRepo.match.WhereSql()
+	db := newRepo.db.Model(t).Omit(newRepo.omits...)
 	if sql != "" {
 		db = db.Where(sql, args...)
 	}
-
 	result := db.Updates(t)
 	if result.Error != nil {
-		r.err = result.Error
-		r.checkErr(result.Error)
+		newRepo.err = result.Error
+		newRepo.checkErr(result.Error)
 		return 0
 	}
 	return result.RowsAffected
 }
 
+// Del 删除
 func (r *Repo[T]) Del() int64 {
-	sql, args := r.match.WhereSql()
+	newRepo := r.cloneInternal()
+	sql, args := newRepo.match.WhereSql()
 	if sql == "" {
-		r.err = fmt.Errorf("delete operation requires a condition")
-		r.checkErr(r.err)
+		newRepo.err = fmt.Errorf("delete operation requires a condition")
+		newRepo.checkErr(newRepo.err)
 		return 0
 	}
 	var t T
-	db := r.DB.Where(sql, args...)
+	db := newRepo.db.Where(sql, args...)
 	result := db.Delete(&t)
 	if result.Error != nil {
-		r.err = result.Error
-		r.checkErr(result.Error)
+		newRepo.err = result.Error
+		newRepo.checkErr(result.Error)
 		return 0
 	}
 	return result.RowsAffected

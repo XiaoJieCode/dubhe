@@ -1,4 +1,6 @@
-package condition
+package clause
+
+import "slices"
 
 const (
 	OpEq      = "="
@@ -26,6 +28,14 @@ type Match struct {
 	Clauses []Clause
 	Orders  []Clause
 	Sets    []Clause
+}
+
+func (m *Match) Clone() *Match {
+	return &Match{
+		Clauses: slices.Clone(m.Clauses),
+		Orders:  slices.Clone(m.Orders),
+		Sets:    slices.Clone(m.Sets),
+	}
 }
 
 func NewMatch() *Match {

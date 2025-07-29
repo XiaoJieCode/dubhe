@@ -2,6 +2,7 @@ package db
 
 import (
 	"dubhe/db/ds"
+	"dubhe/db/util/log"
 	"gorm.io/gorm"
 	"sync"
 )
@@ -37,7 +38,7 @@ func NewRepo[T RepoDefine]() IRepo[T] {
 	_t, ok := templates.Load(key)
 	if ok {
 		return &Repo[T]{
-			DB:           db,
+			db:           db,
 			RepoTemplate: _t.(*RepoTemplate[T]),
 		}
 	}
@@ -46,15 +47,18 @@ func NewRepo[T RepoDefine]() IRepo[T] {
 	if e != nil {
 		panic(e)
 	}
+	logger := log.LogFactory.Get(key)
 	temp := &RepoTemplate[T]{
 		ctx:   nil,
 		table: tableName,
 		model: &model,
+		key:   key,
 		cfg:   &cfg,
+		log:   logger,
 	}
 	templates.Store(key, temp)
 	return &Repo[T]{
-		DB:           db,
+		db:           db,
 		RepoTemplate: temp,
 	}
 

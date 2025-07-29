@@ -8,8 +8,23 @@ import (
 
 // region Base Repository
 
+type GlobalErrHandle func(h IRepoErrHandleBase)
+
+type IRepoErrHandleBase interface {
+	Error() error
+	Continue()
+	Cancel()
+	Panic()
+}
+
+type IRepoErrHandle[T any] interface {
+	IRepoErrHandleBase
+	Repo() IRepo[T]
+}
+
 // IRepo Repo Interface
 type IRepo[T any] interface {
+	DB() *gorm.DB
 	// Tx 使用现有事务或开启新事务
 	Tx() IRepo[T]
 	// Begin 开启新事务
@@ -19,7 +34,7 @@ type IRepo[T any] interface {
 	// Rollback 回滚事务
 	Rollback() IRepo[T]
 	// OnErr 设置错误处理函数
-	OnErr(func(IRepo[T], *err.Error) bool) IRepo[T]
+	OnErr(func(IRepoErrHandle[T])) IRepo[T]
 	// Err 返回Err
 	Err() *err.Error
 	// Clone 克隆当前Repo实例
@@ -31,7 +46,7 @@ type IRepo[T any] interface {
 	// Raw 执行原生SQL
 	Raw(string, ...any) IRepo[T]
 	// Exec 执行原生SQL命令
-	Exec(string, ...any) IRepo[T]
+	Exec(string, ...any) int64
 
 	// Get 查询单条数据, 查询为nil
 	Get() *T
