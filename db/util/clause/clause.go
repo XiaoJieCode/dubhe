@@ -126,7 +126,7 @@ func (m *Match) WhereSql() (string, []any) {
 	}
 
 	sql := ""
-	args := []any{}
+	var args []any
 	for i, c := range m.Clauses {
 		// 拼接连接符，默认AND，遇到OpOr用OR
 		if i > 0 {

@@ -106,7 +106,7 @@ type IRepo[T any] interface {
 	// Null 字段为空
 	Null(string) IRepo[T]
 	// Or 或条件
-	Or(string, ...any) IRepo[T]
+	Or(string, any) IRepo[T]
 	// Like 模糊匹配
 	Like(string, any) IRepo[T]
 	// Select 指定查询字段

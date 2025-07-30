@@ -3,6 +3,7 @@ package ds
 import (
 	"errors"
 	"fmt"
+	"gorm.io/driver/sqlite"
 	"sync"
 	"time"
 
@@ -47,8 +48,8 @@ func RegisterDataSource(name string, cfg DBConfig) error {
 	switch cfg.Driver {
 	case "mysql":
 		dialector = mysql.Open(cfg.DSN)
-	// case "postgres":
-	// 	dialector = postgres.Open(cfg.DSN)
+	case "sqlite":
+		dialector = sqlite.Open(cfg.DSN)
 	// 其他数据库可扩展
 	default:
 		return errors.New("unsupported driver: " + cfg.Driver)

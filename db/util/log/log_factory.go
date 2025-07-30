@@ -5,9 +5,7 @@ import (
 )
 
 var (
-	LogFactory Factory = *NewLogFactory(&defaultLogger{
-		prefix: "default",
-	})
+	LogFactory = *NewLogFactory(NewDefaultLogger("default"))
 )
 
 // Factory 管理多个命名的日志实例

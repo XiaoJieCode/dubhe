@@ -94,9 +94,9 @@ func (r *Repo[T]) Null(s string) IRepo[T] {
 	return newR
 }
 
-func (r *Repo[T]) Or(s string, a ...any) IRepo[T] {
+func (r *Repo[T]) Or(s string, a any) IRepo[T] {
 	newR := r.cloneInternal()
-	newR.match.Or(s, a...)
+	newR.match.Or(s, a)
 	return newR
 }
 

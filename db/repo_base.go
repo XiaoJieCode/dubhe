@@ -104,13 +104,6 @@ func (r *Repo[T]) Err() *err.Error {
 }
 
 func (r *Repo[T]) cloneInternal() *Repo[T] {
-	newTemplate := &RepoTemplate[T]{
-		ctx:   r.ctx,
-		table: r.table,
-		model: r.model,
-		key:   r.key,
-		cfg:   r.cfg,
-	}
 
 	var newPage *Page
 	if r.page != nil {
@@ -119,7 +112,7 @@ func (r *Repo[T]) cloneInternal() *Repo[T] {
 	}
 
 	return &Repo[T]{
-		RepoTemplate: newTemplate,
+		RepoTemplate: r.RepoTemplate,
 		db:           r.db,
 		selects:      slices.Clone(r.selects),
 		match:        *r.match.Clone(),
