@@ -1,18 +1,18 @@
 package db
 
 import (
-	"dubhe/db/util/log"
 	"fmt"
 	"sync"
 )
 
-func (r *Repo[T]) checkErr(e error) {
-	r.log.Info(fmt.Sprintf("repo [%s] error: %s", r.key, e.Error()), log.KV("error", e))
+func (r *Repo[T, K]) handleErr(e error) {
+	r.err = e
+	r.log.Errorf(fmt.Sprintf("repo [%s] error: %s", r.key, e.Error()))
 
 	// 先调用全局注册的错误处理函数
 
 	for _, gh := range globalHandle {
-		h := newErrHandler[T](r, e)
+		h := newErrHandler[T, K](r, e)
 		gh(h)
 		if h.isPanic {
 			panic(h.err)
@@ -27,7 +27,7 @@ func (r *Repo[T]) checkErr(e error) {
 
 	if r.onErrFunc != nil {
 		for _, f := range r.onErrFunc {
-			h := newErrHandler[T](r, e)
+			h := newErrHandler[T, K](r, e)
 			f(h)
 			if h.isPanic {
 				panic(h.err)

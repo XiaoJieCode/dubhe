@@ -13,8 +13,9 @@ import (
 )
 
 var (
-	mu    sync.RWMutex
-	dbMap = make(map[string]*gorm.DB) // key为数据源名称，value为对应gorm.DB连接实例
+	Default = "default" // 默认数据源
+	mu      sync.RWMutex
+	dbMap   = make(map[string]*gorm.DB) // key为数据源名称，value为对应gorm.DB连接实例
 )
 
 // DBConfig 是多数据源注册时传入的数据库配置结构体

@@ -18,13 +18,14 @@ type RepoCfg struct {
 }
 
 // RepoDefine 接口用于模型绑定 Repo 配置
-type RepoDefine interface {
+type RepoDefine[K ID] interface {
 	RepoDefine() RepoCfg
 	TableName() string
+	IModel[K]
 }
 
 // NewRepo 创建并初始化一个通用 Repo
-func NewRepo[T RepoDefine]() IRepo[T] {
+func NewRepo[T RepoDefine[K], K ID]() IRepo[T, K] {
 	// 获取模型信息
 	model := *new(T)
 	tableName := model.TableName()
@@ -56,9 +57,9 @@ func NewRepo[T RepoDefine]() IRepo[T] {
 
 	// 尝试从缓存中获取已有模板
 	if cached, ok := templates.Load(key); ok {
-		return &Repo[T]{
+		return &Repo[T, K]{
 			db:           db,
-			RepoTemplate: cached.(*RepoTemplate[T]),
+			RepoTemplate: cached.(*RepoTemplate[T, K]),
 		}
 	}
 
@@ -71,7 +72,7 @@ func NewRepo[T RepoDefine]() IRepo[T] {
 
 	// 创建并缓存新的 RepoTemplate
 	logger := log.LogFactory.Get(key)
-	template := &RepoTemplate[T]{
+	template := &RepoTemplate[T, K]{
 		ctx:   nil,
 		table: tableName,
 		model: &model,
@@ -81,7 +82,7 @@ func NewRepo[T RepoDefine]() IRepo[T] {
 	}
 	templates.Store(key, template)
 
-	return &Repo[T]{
+	return &Repo[T, K]{
 		db:           db,
 		RepoTemplate: template,
 	}

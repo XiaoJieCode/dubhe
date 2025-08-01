@@ -4,63 +4,46 @@ type Page struct {
 	Page   int   `json:"page" form:"page"`
 	Size   int   `json:"size" form:"size"`
 	Total  int64 `json:"total" form:"total"`
-	Result any   `json:"result" form:"result"`
+	Result []any `json:"result" form:"result"`
 	Last   int64 `json:"last" form:"last"`
 }
+
 type PageT[T any] struct {
 	Page   int   `json:"page" form:"page"`
 	Size   int   `json:"size" form:"size"`
 	Total  int64 `json:"total" form:"total"`
-	Result []*T  `json:"result" form:"result"`
+	Result []T   `json:"result" form:"result"`
 	Last   int64 `json:"last" form:"last"`
 }
 
-// ToPageT Page ➜ PageT[any]
+// ToPageT 将非泛型分页转换成泛型分页，适用于泛型处理
 func (p *Page) ToPageT() *PageT[any] {
-	result, ok := p.Result.([]*any)
-	if !ok {
-		// 如果不是 []*any，尝试强制转换 []interface{} -> []*any
-		if slice, ok := p.Result.([]interface{}); ok {
-			var casted []*any
-			for _, v := range slice {
-				val := v
-				casted = append(casted, &val)
-			}
-			return &PageT[any]{
-				Page:   p.Page,
-				Size:   p.Size,
-				Total:  p.Total,
-				Result: casted,
-				Last:   p.Last,
-			}
-		}
-		// 无法转换，返回空结果
-		return &PageT[any]{
-			Page:   p.Page,
-			Size:   p.Size,
-			Total:  p.Total,
-			Result: []*any{},
-			Last:   p.Last,
-		}
-	}
-
+	// 如果不能断言为 []any，返回空结果
 	return &PageT[any]{
 		Page:   p.Page,
 		Size:   p.Size,
 		Total:  p.Total,
-		Result: result,
+		Result: []any{},
 		Last:   p.Last,
 	}
 }
 
-// ToPage PageT[T] ➜ Page（可用于 JSON 输出、统一处理等）
+// ToPage 将泛型分页转换为非泛型分页，方便统一JSON输出或兼容旧接口
 func (p PageT[T]) ToPage() *Page {
-	// Page.Result 使用 any 类型表示，可以直接赋值
 	return &Page{
 		Page:   p.Page,
 		Size:   p.Size,
 		Total:  p.Total,
-		Result: p.Result,
+		Result: any(p.Result).([]any),
 		Last:   p.Last,
 	}
+}
+
+// ToAnySlice 辅助函数，将任意类型切片转换成 []any，方便赋值给Page.Result
+func ToAnySlice[T any](src []T) []any {
+	res := make([]any, len(src))
+	for i, v := range src {
+		res[i] = v
+	}
+	return res
 }
