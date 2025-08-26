@@ -76,18 +76,21 @@ func (r *Repo[T, K]) Take() *T {
 	var model T
 
 	if r.isRaw {
-		r.db.Limit(1).Scan(&model)
+		newRepo.db.Limit(1).Scan(&model)
 		newRepo.handleErr(r.db.Error)
 		return &model
 	}
 
+	db := newRepo.db.Model(&model).Omit(newRepo.omits...).Limit(1)
+	if len(newRepo.match.Orders) > 0 {
+		db = db.Order(newRepo.match.OrderSql())
+	}
 	sql, args := newRepo.match.WhereSql()
-	db := newRepo.db.Model(new(T)).Omit(newRepo.omits...).Limit(1)
 	if sql != "" {
 		db = db.Where(sql, args...)
 	}
 
-	err := db.Find(&model).Error
+	err := db.First(&model).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil
