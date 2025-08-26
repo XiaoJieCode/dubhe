@@ -86,6 +86,16 @@ func RegisterDataSource(name string, cfg DBConfig) error {
 	return nil
 }
 
+func RegisterGorm(name string, db *gorm.DB) error {
+	mu.Lock()
+	defer mu.Unlock()
+	if _, exists := dbMap[name]; exists {
+		return errors.New("data source already exists: " + name)
+	}
+	dbMap[name] = db
+	return nil
+}
+
 // GetDB 支持可选参数name：
 // - 如果未传name且只有一个数据源，则返回该唯一数据源
 // - 如果未传name且多于一个数据源，返回错误
