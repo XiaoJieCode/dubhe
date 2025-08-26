@@ -6,7 +6,8 @@ import (
 )
 
 type Demo struct {
-	ID   int64  `gorm:"primaryKey;autoIncrement" json:"id"`
+	ID int64 `gorm:"primaryKey;autoIncrement" json:"id"`
+
 	Name string `gorm:"column:name;type:varchar(255);not null"`
 	Age  int    `gorm:"column:age;type:int;not null"`
 }

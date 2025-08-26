@@ -93,7 +93,9 @@ func RegisterDataSource(name string, cfg DBConfig) error {
 func GetDB(names ...string) (*gorm.DB, error) {
 	mu.RLock()
 	defer mu.RUnlock()
-
+	if len(dbMap) == 0 {
+		return nil, errors.New("no data sources registered")
+	}
 	if len(names) == 0 {
 		if len(dbMap) == 1 {
 			for _, db := range dbMap {
