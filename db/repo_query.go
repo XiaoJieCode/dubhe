@@ -76,8 +76,14 @@ func (r *Repo[T, K]) Take() *T {
 	var model T
 
 	if r.isRaw {
-		newRepo.db.Limit(1).Scan(&model)
-		newRepo.handleErr(r.db.Error)
+		err := newRepo.db.Limit(1).Scan(&model).Error
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil
+		}
+		if err != nil {
+			newRepo.handleErr(newRepo.db.Error)
+		}
+
 		return &model
 	}
 
