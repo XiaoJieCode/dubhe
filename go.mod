@@ -1,4 +1,4 @@
-module dubhe
+module github.com/XiaoJieCode/dubhe
 
 go 1.24
 
