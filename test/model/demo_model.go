@@ -1,8 +1,8 @@
 package model
 
 import (
-	"dubhe/db"
-	"dubhe/db/ds"
+	"github.com/xiaojiecode/dubhe/db"
+	"github.com/xiaojiecode/dubhe/db/ds"
 )
 
 type Demo struct {

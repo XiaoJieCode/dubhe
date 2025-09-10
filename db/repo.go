@@ -2,12 +2,12 @@ package db
 
 import (
 	"context"
-	"dubhe/db/clause"
 	"errors"
 	"fmt"
 	"slices"
 	"time"
 
+	"github.com/xiaojiecode/dubhe/db/clause"
 	"gorm.io/gorm"
 )
 

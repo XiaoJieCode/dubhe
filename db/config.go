@@ -1,10 +1,10 @@
 package db
 
 import (
-	"dubhe/db/ds"
 	"fmt"
 	"sync"
 
+	"github.com/xiaojiecode/dubhe/db/ds"
 	"gorm.io/gorm"
 )
 

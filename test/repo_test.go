@@ -1,10 +1,10 @@
 package test
 
 import (
-	"dubhe/test/model"
 	"fmt"
 	"log"
 
+	"github.com/xiaojiecode/dubhe/test/model"
 	"gorm.io/gorm"
 )
 

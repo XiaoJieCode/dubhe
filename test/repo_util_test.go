@@ -1,11 +1,11 @@
 package test
 
 import (
-	"dubhe/test/model"
 	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/xiaojiecode/dubhe/test/model"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )

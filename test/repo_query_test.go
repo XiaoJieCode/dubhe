@@ -2,11 +2,11 @@ package test
 
 import (
 	"context"
-	"dubhe/db"
-	"dubhe/test/model"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/xiaojiecode/dubhe/db"
+	"github.com/xiaojiecode/dubhe/test/model"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )

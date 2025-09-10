@@ -1,7 +1,7 @@
 package test
 
 import (
-	"dubhe/db/ds"
+	"github.com/xiaojiecode/dubhe/db/ds"
 )
 
 func init() {
