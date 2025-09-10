@@ -3,9 +3,10 @@ package ds
 import (
 	"errors"
 	"fmt"
-	"gorm.io/driver/sqlite"
 	"sync"
 	"time"
+
+	"gorm.io/driver/sqlite"
 
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -86,11 +87,15 @@ func RegisterDataSource(name string, cfg DBConfig) error {
 	return nil
 }
 
+// RegisterGorm 直接注册一个已有的 *gorm.DB
 func RegisterGorm(name string, db *gorm.DB) error {
+	if db == nil {
+		return errors.New("db is nil")
+	}
 	mu.Lock()
 	defer mu.Unlock()
 	if _, exists := dbMap[name]; exists {
-		return errors.New("data source already exists: " + name)
+		return errors.New("datasource already exists: " + name)
 	}
 	dbMap[name] = db
 	return nil

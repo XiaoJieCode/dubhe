@@ -3,8 +3,9 @@ package test
 import (
 	"dubhe/test/model"
 	"fmt"
-	"gorm.io/gorm"
 	"log"
+
+	"gorm.io/gorm"
 )
 
 // InitSingleData 插入一条测试数据

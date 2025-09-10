@@ -1,13 +1,13 @@
 package test
 
 import (
-	"dubhe/db"
 	"dubhe/test/model"
 	"fmt"
+	"testing"
+
 	"github.com/stretchr/testify/assert"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
-	"testing"
 )
 
 // 1. 初始化与设置环境
@@ -24,7 +24,10 @@ func TestRepo_WithDB(t *testing.T) {
 			Name: "test",
 		})
 	}
-	demo := len(repo.WithDB(gdb).List())
+	list, err := repo.WithDB(gdb).List()
+	assert.Nil(t, err)
+	demo := len(list)
+
 	fmt.Println(demo)
 }
 
@@ -36,24 +39,14 @@ func TestRepo_OnErr(t *testing.T) {
 }
 func TestRepo_Clone(t *testing.T) {
 	repo := model.NewDemoRepo()
-	list := repo.List()
+	list, err := repo.List()
+	assert.Nil(t, err)
 	fmt.Println(list)
 }
 
-// 7. 错误获取
-func TestRepo_Err(t *testing.T) {
-	affected := model.NewDemoRepo().OnErr(func(handle db.IRepoErrHandle[model.Demo, int64]) {
-		handle.Panic()
-	}).Create(&model.Demo{
-		ID:   1,
-		Name: "test",
-		Age:  0,
-	})
-	fmt.Println(affected)
-}
-
 func TestRepo_OnSQLErr(t *testing.T) {
-	list := model.NewDemoRepo().Where("a<d").List()
+	list, e := model.NewDemoRepo().Where("a<d").List()
+	assert.Nil(t, e)
 	assert.Equal(t, 0, len(list))
 }
 

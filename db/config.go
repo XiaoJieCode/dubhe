@@ -2,9 +2,10 @@ package db
 
 import (
 	"dubhe/db/ds"
-	"dubhe/db/util/log"
-	"gorm.io/gorm"
+	"fmt"
 	"sync"
+
+	"gorm.io/gorm"
 )
 
 // 缓存模板，避免重复构建相同表结构的 RepoTemplate
@@ -25,7 +26,7 @@ type RepoDefine[K ID] interface {
 }
 
 // NewRepo 创建并初始化一个通用 Repo
-func NewRepo[T RepoDefine[K], K ID]() IRepo[T, K] {
+func NewRepo[T RepoDefine[K], K ID](g ...*gorm.DB) IRepo[T, K] {
 	// 获取模型信息
 	model := *new(T)
 	tableName := model.TableName()
@@ -38,15 +39,22 @@ func NewRepo[T RepoDefine[K], K ID]() IRepo[T, K] {
 
 	// 获取数据库实例
 	var db *gorm.DB
-	switch {
-	case cfg.DB != nil:
-		db = cfg.DB
-	case cfg.DataSource != "":
-		db = ds.MustGetDB(cfg.DataSource)
-	default:
-		db = ds.MustGetDB()
+	if len(g) != 0 {
+		db = g[0]
+	} else {
+		switch {
+		case cfg.DB != nil:
+			db = cfg.DB
+		case cfg.DataSource != "":
+			db = ds.MustGetDB(cfg.DataSource)
+		default:
+			db = ds.MustGetDB()
+		}
 	}
 
+	if db == nil {
+		panic(fmt.Sprintf("cannot init Repo: db is nil"))
+	}
 	// 构造缓存键（数据源 + 表名）
 	key := tableName
 	if cfg.DataSource != "" {
@@ -71,14 +79,12 @@ func NewRepo[T RepoDefine[K], K ID]() IRepo[T, K] {
 	}
 
 	// 创建并缓存新的 RepoTemplate
-	logger := log.LogFactory.Get(key)
 	template := &RepoTemplate[T, K]{
 		ctx:   nil,
 		table: tableName,
 		model: &model,
 		key:   key,
 		cfg:   &cfg,
-		log:   logger,
 	}
 	templates.Store(key, template)
 
